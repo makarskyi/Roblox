@@ -1,1 +1,61 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 
+local ESPContainer = Instance.new("Folder", CoreGui)
+ESPContainer.Name = "ESPContainer"
+
+local function CreateESP(player)
+    local character = player.Character
+    if not character then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ESP"
+    billboard.Adornee = character:FindFirstChild("HumanoidRootPart")
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+
+    local textLabel = Instance.new("TextLabel", billboard)
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = player.Name
+    textLabel.TextColor3 = Color3.new(1, 0, 0)
+    textLabel.TextStrokeTransparency = 0.5
+
+    billboard.Parent = ESPContainer
+end
+
+local function RemoveESP(player)
+    for _, gui in pairs(ESPContainer:GetChildren()) do
+        if gui.Adornee and gui.Adornee.Parent == player.Character then
+            gui:Destroy()
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        CreateESP(player)
+    end)
+    player.CharacterRemoving:Connect(function()
+        RemoveESP(player)
+    end)
+end)
+
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= Players.LocalPlayer then
+        if player.Character then
+            CreateESP(player)
+        end
+        player.CharacterAdded:Connect(function()
+            CreateESP(player)
+        end)
+        player.CharacterRemoving:Connect(function()
+            RemoveESP(player)
+        end)
+    end
+end
+
+Players.PlayerRemoving:Connect(function(player)
+    RemoveESP(player)
+end)
