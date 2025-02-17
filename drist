@@ -1,1 +1,50 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
+-- Функция для поиска машины
+local function findCar()
+    for _, vehicle in pairs(workspace:GetDescendants()) do
+        -- Проверяем, есть ли сиденье
+        local seat = vehicle:FindFirstChildOfClass("VehicleSeat") or vehicle:FindFirstChild("Seat") or vehicle:FindFirstChild("DriverSeat")
+        if seat and seat.Occupant == character.Humanoid then
+            return vehicle, seat
+        end
+    end
+    return nil, nil
+end
+
+-- Функция для создания эффекта дрифта
+local function applyDrift(car)
+    -- Ищем колеса
+    for _, part in pairs(car:GetDescendants()) do
+        if part:IsA("Part") and part.Name:lower():find("wheel") then
+            -- Добавляем BodyVelocity для эффекта дрифта
+            local bodyVelocity = Instance.new("BodyVelocity", part)
+            bodyVelocity.Velocity = part.CFrame.lookVector * 50 -- Настройте скорость
+            bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            print("⚙️ Дрифт активирован для колеса: " .. part.Name)
+        end
+    end
+end
+
+-- Основной цикл
+while true do
+    -- Ищем машину
+    local car, seat = findCar()
+    
+    if car then
+        -- Если машина найдена, применяем дрифт
+        applyDrift(car)
+        
+        -- Ждем, пока игрок не выйдет из машины
+        repeat
+            task.wait(1)
+        until not seat or not seat.Occupant or seat.Occupant ~= character.Humanoid
+        
+        print("❌ Игрок вышел из машины.")
+    else
+        -- Если машина не найдена, ждем и проверяем снова
+        print("❌ Машина не найдена или игрок не за рулём.")
+        task.wait(5)
+    end
+end
